@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flower Planting Schedule</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #faf8f4;
+  color: #2c2416;
+  padding: 32px 24px;
+  min-height: 100vh;
+}
+.container { max-width: 1100px; margin: 0 auto; }
+.header-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  border-bottom: 3px solid #2c2416;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+}
+h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+.subtitle { font-size: 14px; color: #8a7e6b; font-style: italic; }
+.legend-bar {
+  border-bottom: 1px solid #d4c9b5;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.legend { display: flex; gap: 20px; align-items: center; font-size: 13px; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.legend-line { width: 14px; height: 3px; background: #bf360c; display: inline-block; border-radius: 2px; }
+.filters { display: flex; gap: 4px; }
+.filter-btn {
+  padding: 4px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1.5px solid #ccc4b3;
+  border-radius: 20px;
+  background: transparent;
+  color: #6b6152;
+  cursor: pointer;
+  font-weight: 400;
+  transition: all 0.2s;
+}
+.filter-btn.active {
+  border-color: #2c2416;
+  background: #2c2416;
+  color: #faf8f4;
+  font-weight: 600;
+}
+.week-headers {
+  display: grid;
+  grid-template-columns: 150px repeat(10, 1fr);
+  margin-bottom: 4px;
+}
+.week-label {
+  font-size: 10px;
+  color: #8a7e6b;
+  text-align: center;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+.crop-label-header {
+  font-size: 10px;
+  color: #8a7e6b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-left: 4px;
+}
+.plant-rows { display: flex; flex-direction: column; gap: 3px; }
+.plant-row {
+  display: grid;
+  grid-template-columns: 150px repeat(10, 1fr);
+  align-items: center;
+  padding: 6px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.plant-row:hover { background: #f0ebe1; }
+.plant-row.alt { background: #f5f2ec; }
+.plant-row.alt:hover { background: #f0ebe1; }
+.plant-row.selected { background: #f0ebe1; }
+.crop-name {
+  font-size: 13px;
+  font-weight: 600;
+  padding-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.crop-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.timeline-cell {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 1px;
+}
+.bar-segment {
+  position: absolute;
+  height: 10px;
+  opacity: 0.85;
+}
+.transplant-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #bf360c;
+  border: 2px solid #faf8f4;
+  z-index: 2;
+  box-shadow: 0 0 0 1px #bf360c;
+}
+.direct-dot {
+  width: 18px;
+  height: 10px;
+  border-radius: 5px;
+  opacity: 0.85;
+}
+.strat-badge {
+  font-size: 9px;
+  background: #e8e0d4;
+  color: #6b5e4d;
+  padding: 1px 5px;
+  border-radius: 8px;
+  margin-left: 4px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.detail-card {
+  margin-top: 20px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #d4c9b5;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  animation: fadeIn 0.2s ease;
+  display: none;
+}
+.detail-card.visible { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.method-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.detail-name { font-size: 22px; font-weight: 700; }
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px 24px;
+}
+.detail-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8a7e6b;
+  margin-bottom: 2px;
+}
+.detail-value { font-size: 14px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-bar">
+    <h1>Flower Planting Schedule</h1>
+    <span class="subtitle">seed starting &amp; transplant guide</span>
+  </div>
+  <div class="legend-bar">
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch" style="background:#4a2060"></span> Indoor start → transplant</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:#8a5a2a"></span> Direct sow</span>
+      <span class="legend-item"><span class="legend-line"></span> Transplant date</span>
+    </div>
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" onclick="setFilter('Indoor')">Indoor</button>
+      <button class="filter-btn" onclick="setFilter('Direct')">Direct sow</button>
+      <button class="filter-btn" onclick="setFilter('Strat')">Needs stratification</button>
+    </div>
+  </div>
+
+  <div class="week-headers" id="weekHeaders"></div>
+  <div class="plant-rows" id="plantRows"></div>
+  <div class="detail-card" id="detailCard"></div>
+</div>
+
+<script>
+const plantData = [
+  { plant: "Lupine", start: "Feb 19", startIdx: 0, method: "Indoor", out: "May 1", germ: "14-30", temp: "55-70", light: "Light", moisture: "Even", soil: "Moist", strat: "2-4 wk" },
+  { plant: "Delphinium", start: "Feb 26", startIdx: 1, method: "Indoor", out: "May 1", germ: "14-21", temp: "65-75", light: "Dark", moisture: "Even", soil: "Moist", strat: "2-4 wk" },
+  { plant: "Foxglove", start: "Feb 26", startIdx: 1, method: "Indoor", out: "May 1", germ: "15-20", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Snapdragon", start: "Feb 26", startIdx: 1, method: "Indoor", out: "May 1", germ: "7-14", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Columbine", start: "Mar 5", startIdx: 2, method: "Indoor", out: "May 1", germ: "20-30", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: "4-6 wk" },
+  { plant: "Penstemon", start: "Mar 5", startIdx: 2, method: "Indoor", out: "May 1", germ: "10-21", temp: "60-70", light: "Light", moisture: "Even", soil: "Moist", strat: "4-6 wk" },
+  { plant: "Petunia", start: "Mar 5", startIdx: 2, method: "Indoor", out: "May 15", germ: "7-14", temp: "70-80", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Salvia", start: "Mar 5", startIdx: 2, method: "Indoor", out: "May 15", germ: "10-15", temp: "70-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Baptisia", start: "Mar 19", startIdx: 3, method: "Indoor", out: "May 1", germ: "10-20", temp: "60-70", light: "Light", moisture: "Even", soil: "Moist", strat: "2-4 wk" },
+  { plant: "Sweet Peas", start: "Mar 19", startIdx: 3, method: "Indoor", out: "May 1", germ: "10-21", temp: "55-65", light: "Dark", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Zinnias", start: "Apr 2", startIdx: 4, method: "Indoor", out: "May 15", germ: "5-7", temp: "70-85", light: "Dark", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Alyssum", start: "Apr 9", startIdx: 5, method: "Indoor", out: "May 1", germ: "7-14", temp: "60-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Cosmos", start: "Apr 9", startIdx: 5, method: "Indoor", out: "May 15", germ: "5-10", temp: "70-80", light: "Dark", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Hyssop", start: "Apr 9", startIdx: 5, method: "Indoor", out: "May 15", germ: "7-14", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: "2-4 wk" },
+  { plant: "Prairie Smoke", start: "Apr 9", startIdx: 5, method: "Indoor", out: "May 1", germ: "20-30", temp: "60-70", light: "Light", moisture: "Moist", soil: "Drain", strat: "6-8 wk" },
+  { plant: "Spotted Bee Balm", start: "Apr 9", startIdx: 5, method: "Indoor", out: "May 15", germ: "10-20", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Aster", start: "Apr 16", startIdx: 6, method: "Indoor", out: "May 15", germ: "7-14", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Coreopsis", start: "Apr 16", startIdx: 6, method: "Indoor", out: "May 15", germ: "10-15", temp: "70-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Forget-Me-Not", start: "Apr 16", startIdx: 6, method: "Indoor", out: "May 1", germ: "8-14", temp: "60-70", light: "Light", moisture: "Even", soil: "Moist", strat: "2-4 wk" },
+  { plant: "Borage", start: "Apr 23", startIdx: 7, method: "Indoor", out: "May 15", germ: "5-15", temp: "65-75", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Creeping Thyme", start: "Apr 23", startIdx: 7, method: "Indoor", out: "May 15", germ: "14-21", temp: "65-75", light: "Light", moisture: "Moist", soil: "Drain", strat: "2-4 wk" },
+  { plant: "Verbena", start: "Apr 23", startIdx: 7, method: "Indoor", out: "May 15", germ: "14-21", temp: "70-75", light: "Dark", moisture: "Even", soil: "Moist", strat: "2-4 wk" },
+  { plant: "Goldenrod", start: "May 1", startIdx: 8, method: "Direct", out: null, germ: "10-20", temp: "60-75", light: "Light", moisture: "Even", soil: "Moist", strat: "4-6 wk" },
+  { plant: "Nasturtium", start: "May 1", startIdx: 8, method: "Direct", out: null, germ: "7-14", temp: "65-75", light: "Dark", moisture: "Even", soil: "Moist", strat: null },
+  { plant: "Poppies", start: "May 1", startIdx: 8, method: "Direct", out: null, germ: "10-20", temp: "60-70", light: "Light", moisture: "Even", soil: "Moist", strat: null },
+];
+
+const weeks = ["Feb 19","Feb 26","Mar 5","Mar 19","Apr 2","Apr 9","Apr 16","Apr 23","May 1","May 15"];
+const colors = {
+  Indoor: { bg: "#4a2060", text: "#d4a8e8" },
+  Direct: { bg: "#8a5a2a", text: "#e6c9a0" },
+};
+
+let currentFilter = "all";
+let selectedIdx = null;
+
+function getTransplantIdx(out) {
+  if (!out) return null;
+  if (out === "May 1") return 8;
+  if (out === "May 8") return 8;
+  return 9;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  selectedIdx = null;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    const label = btn.textContent;
+    const match = (f === 'all' && label === 'All') ||
+                  (f === 'Indoor' && label === 'Indoor') ||
+                  (f === 'Direct' && label === 'Direct sow') ||
+                  (f === 'Strat' && label === 'Needs stratification');
+    btn.classList.toggle('active', match);
+  });
+  render();
+}
+
+function selectPlant(idx) {
+  selectedIdx = selectedIdx === idx ? null : idx;
+  render();
+}
+
+function getFiltered() {
+  if (currentFilter === "all") return plantData;
+  if (currentFilter === "Strat") return plantData.filter(p => p.strat !== null);
+  return plantData.filter(p => p.method === currentFilter);
+}
+
+function render() {
+  const filtered = getFiltered();
+
+  const hdr = document.getElementById('weekHeaders');
+  hdr.innerHTML = '<div class="crop-label-header">Flower</div>' +
+    weeks.map(w => '<div class="week-label">' + w + '</div>').join('');
+
+  const rows = document.getElementById('plantRows');
+  rows.innerHTML = filtered.map((p, i) => {
+    const c = colors[p.method];
+    const barStart = p.startIdx;
+    const transplantIdx = getTransplantIdx(p.out);
+    const isSelected = selectedIdx === i;
+    const altClass = i % 2 !== 0 ? ' alt' : '';
+    const selClass = isSelected ? ' selected' : '';
+    const stratBadge = p.strat ? '<span class="strat-badge">❄ ' + p.strat + '</span>' : '';
+
+    const cells = weeks.map((_, wi) => {
+      const isActive = wi >= barStart && wi <= (transplantIdx !== null ? transplantIdx : barStart);
+      const isStart = wi === barStart;
+      const isTransplant = transplantIdx !== null && wi === transplantIdx;
+      const isInRange = isActive && !isTransplant;
+      let inner = '';
+
+      if (isInRange) {
+        const left = isStart ? '30%' : '0';
+        const right = (transplantIdx !== null && wi === transplantIdx - 1) ? '0' : (wi < (transplantIdx || barStart) ? '0' : '30%');
+        const radius = isStart ? '5px 0 0 5px' : '0';
+        inner = '<div class="bar-segment" style="left:' + left + ';right:' + right + ';background:' + c.bg + ';border-radius:' + radius + '"></div>';
+      }
+      if (isTransplant) {
+        inner = '<div class="bar-segment" style="left:0;right:50%;background:' + c.bg + '"></div><div class="transplant-dot"></div>';
+      }
+      if (!isActive && !isTransplant && wi === barStart && p.method === "Direct") {
+        inner = '<div class="direct-dot" style="background:' + c.bg + '"></div>';
+      }
+
+      return '<div class="timeline-cell">' + inner + '</div>';
+    }).join('');
+
+    return '<div class="plant-row' + altClass + selClass + '" onclick="selectPlant(' + i + ')">' +
+      '<div class="crop-name"><span class="crop-dot" style="background:' + c.bg + '"></span>' + p.plant + stratBadge + '</div>' +
+      cells + '</div>';
+  }).join('');
+
+  const card = document.getElementById('detailCard');
+  if (selectedIdx !== null && filtered[selectedIdx]) {
+    const p = filtered[selectedIdx];
+    const c = colors[p.method];
+    let details = [
+      { label: "Start date", value: p.start },
+      p.out ? { label: "Transplant", value: p.out } : null,
+      { label: "Germination", value: p.germ + " days" },
+      { label: "Temp range", value: p.temp + "\u00B0F" },
+      { label: "Light", value: p.light === "Light" ? "\u2600\uFE0F Needs light" : "\uD83C\uDF11 Darkness" },
+      { label: "Moisture", value: p.moisture },
+      { label: "Soil", value: p.soil },
+      p.strat ? { label: "Stratification", value: "\u2744\uFE0F " + p.strat } : null,
+    ].filter(Boolean);
+
+    card.className = 'detail-card visible';
+    card.innerHTML = '<div class="detail-header">' +
+      '<span class="method-badge" style="background:' + c.bg + ';color:' + c.text + '">' + p.method + '</span>' +
+      '<span class="detail-name">' + p.plant + '</span></div>' +
+      '<div class="detail-grid">' +
+      details.map(d => '<div><div class="detail-label">' + d.label + '</div><div class="detail-value">' + d.value + '</div></div>').join('') +
+      '</div>';
+  } else {
+    card.className = 'detail-card';
+    card.innerHTML = '';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
